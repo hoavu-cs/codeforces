@@ -23,6 +23,7 @@ void dfs(int node) {
             tree_size[node] += tree_size[v];
         }
     }
+
     if (tree_size[node] >= x && k_count <= k - 1) {
         n_count += tree_size[node];
         k_count++;
@@ -43,7 +44,6 @@ int main() {
 
         int n = 0;
         cin >> n >> k;
-
         edges.assign(n + 1, vector<int>());
 
         for (int i = 0; i < n - 1; i++) {
@@ -54,6 +54,7 @@ int main() {
         }
 
         int left = 1, right = n, ans = 0;
+        
         while (left <= right) {
             x = (left + right)/2;
 
@@ -71,6 +72,7 @@ int main() {
                 right = x - 1;
             }
         }
+
         cout << ans << endl;
         n_tests--;
     }
