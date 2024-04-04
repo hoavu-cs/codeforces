@@ -1,13 +1,29 @@
-    #include<bits/stdc++.h>
-    using namespace std;
-    #define rep(s,e,i) for (int i = s; i <= e; ++i)
-    #define pb push_back
-    #define tcs int T;cin>>T;while(T--)
-    const int MOD=998244353,N=3*1e5+2;
-    vector<int>adj[N];int ans;
-     
-    int dfs(int ind,int par){long long ans1=1;for(auto ch:adj[ind]){
-    if(ch!=par){int z=dfs(ch,ind);ans1=(ans1*z)%MOD;ans=(ans+z-1)%MOD;}}return ans1+1;}
-     
-    signed main(){tcs{int n,x,y;cin>>n;rep(1,n-1,i){cin>>x>>y;adj[x].pb(y);adj[y].pb(x);}
-    ans=0;cout<<(dfs(1,-1)+ans)%MOD<<endl;rep(1,n,i){adj[i].clear();}}}
+    #include<stdio.h>
+    #include<vector>
+    typedef long long ll;
+    const int N=3e5+5;
+    const ll mod=998244353;
+    std::vector<int> v[N];
+    int t,n;
+    ll dp[N];
+    auto dfs = [
+    	DFS = [](auto &&self,int u,int fa) -> void {
+    		ll mul=1;
+    		for(auto i:v[u]) if(i!=fa) self(self,i,u),mul=mul*dp[i]%mod;
+    		dp[u]=(mul+1)%mod;
+    	}
+    ](int u,int fa) -> void {DFS(DFS,u,fa);};
+    int main(){
+    	scanf("%d",&t);
+    	while(t--){
+    		scanf("%d",&n);
+    		for(int i=1;i<=n;i++) v[i].clear(),dp[i]=0;
+    		for(int i=1,x,y;i<n;i++) scanf("%d%d",&x,&y),v[x].emplace_back(y),v[y].emplace_back(x);
+    		dfs(1,-1);
+    		ll ans=0;
+    		for(int i=1;i<=n;i++) ans=(ans+dp[i])%mod;
+    		printf("%lld\n",((ans-n+1)%mod+mod)%mod);
+    	}
+    	return 0;
+    }
+    	  	     		    				      	 	 	
