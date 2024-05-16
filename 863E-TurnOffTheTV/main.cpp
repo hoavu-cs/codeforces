@@ -65,7 +65,6 @@ vector<vector<int>> build_sparse_table(vector<int> &check_points, vector<int> &s
     for (int level = 1; level < num_levels; level++) {
         for (int i = 0; i < n; i++) {
             int length = (1 << (level - 1));
-            //cout << "length = " << length << endl;
             if (i + length >= n) {
                 break;
             } else {
