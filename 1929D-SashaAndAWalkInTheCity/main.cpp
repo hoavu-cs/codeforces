@@ -12,6 +12,7 @@ void dfs(long u, long p) {
     A[u] = 1;
     B[u] = 0;
     int n_children = 0;
+    
     for (auto v : adj[u]) {
         if (v == p) continue;
         dfs(v, u);
@@ -51,6 +52,6 @@ int main() {
         
         cout << (ans % MOD + MOD) % MOD << endl;
     }
-    
+
     return 0;
 }
