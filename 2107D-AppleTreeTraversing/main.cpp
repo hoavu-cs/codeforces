@@ -1,91 +1,110 @@
 #include <iostream>
 #include <vector>
+#include <unordered_map>
 #include <unordered_set>
 #include <algorithm>
-#include <list>
 
 using namespace std;
 
-typedef u_int32_t U32;
+vector<vector<int>> edges;
+vector<int> parent;
+vector<int> pi;
+unordered_set<int> remaining;
+vector<tuple<int, int, int>> apple_paths;
 
-vector<U32> longest_path_to_leaf;
-vector<U32> leaf_index; 
-vector<U32> parent;
-
-// Find the longest path from u to a leaf node of the tree rooted at u. Tiebreak by the index of the leaf node.
-void dfs(const vector<list<U32>>& edges, U32 u, U32 p) {
-    U32 max_length = 1;
-    U32 best_leaf = u;
-
-    for (const U32& v : edges[u]) {
-        if (v == p) {
-            parent[u] = v;
-            continue;
-        }
-
-        dfs(edges, v, u);
-        U32 candidate_length = longest_path_to_leaf[v] + 1;
-        
-        if (candidate_length > max_length) {
-            max_length = candidate_length;
-            best_leaf = leaf_index[v];
-        } else if (candidate_length == max_length && leaf_index[v] > best_leaf) {
-            best_leaf = leaf_index[v];
+// Compute the parent of each node in the tree after fixing the root at a given node
+void root_tree(int u, int p) {
+    for (int v : edges[u]) {
+        if (v != p && remaining.count(v)) {
+            parent[v] = u;
+            root_tree(v, u);
         }
     }
+}
 
-    longest_path_to_leaf[u] = max_length;
-    leaf_index[u] = best_leaf;
+// Compute the longest path from the root to any leaf node in terms of the number of nodes
+// Tiebreak by the node with max index
+tuple<int, int> longest_path (int u, int p) {
+    int path_length = 1;
+    int leaf_index = u;
+
+    for (int v : edges[u]) {
+        if (v != p && remaining.count(v)) {
+            auto [length, index] = longest_path(v, u);
+            if (length + 1 > path_length || (length + 1 == path_length && index > leaf_index)) {
+                path_length = length + 1;
+                leaf_index = index;
+                pi[v] = u;
+            }
+        }
+    }
+    return {path_length, leaf_index};
 }
 
 int main() {
-    U32 T;
+
+    int T;
     cin >> T;
 
     while (T--) {
         int n;
+        
         cin >> n;
+        edges = vector<vector<int>>(n + 1);
+        parent = vector<int>(n + 1, 0);
+        pi = vector<int>(n + 1, 0);
+        apple_paths.clear();
+        remaining.clear();
 
-        vector<list<U32>> edges(n + 1);
-        unordered_set<U32> root_set; 
-
-        longest_path_to_leaf.assign(n + 1, 0);
-        leaf_index.assign(n + 1, 0);
-        parent.assign(n + 1, 0);
-
-        for (size_t i = 0; i < n - 1; ++i) {
-            U32 u, v;
+        for (int i = 0; i < n - 1; i++) {
+            int u, v;
             cin >> u >> v;
             edges[u].push_back(v);
             edges[v].push_back(u);
         }
 
-        for (size_t i = 1; i <= n; ++i) {
-            root_set.insert(i);
+        for (int i = 1; i <= n; i++) {
+            remaining.insert(i);
         }
 
-        dfs(edges, 1, 0);
-        vector<tuple<U32, U32, U32>> sorted_nodes;
+        root_tree(1, 0); // pick a node in the remaining forest
 
-        for (size_t i = 1; i <= n; ++i) {
+        while (remaining.size() > 0) {
+            int root = *remaining.begin(); // pick an arbitrary root from remaining nodes
+            // find the leaf u with longest path from root 
+            // find the leaf v with longest path from u
+            // u and v are the endpoints of the longest path in this tree
+            
+            auto [length_1, u] = longest_path(root, 0); 
+            pi.clear();
+            pi[u] = 0; 
+            auto [length_2, v] = longest_path(u, 0);
 
-        }
-
-        // Sort the nodes by the longest path to leaf and then by the higher index of the leaf endpoint of the path.
-        
-        for (size_t i = 1; i <= n; ++i) {
-            sorted_nodes.push_back({i, longest_path_to_leaf[i], leaf_index[i]});
-        }
-
-        std::sort(sorted_nodes.begin(), sorted_nodes.end(), [](const auto& a, const auto& b) {
-            if (get<1>(a) != get<1>(b)) {
-                return get<1>(a) > get<1>(b); // Sort by longest path length
+            apple_paths.push_back({length_2, max(u, v), min(u, v)});
+            
+            // delete nodes along the path from u to v
+            while (v != 0) {
+                remaining.erase(v);
+                v = pi[v];
             }
-            return get<2>(a) > get<2>(b); // Tiebreak by leaf index
+        }
+
+        sort(apple_paths.begin(), apple_paths.end(), [](const tuple<int, int, int>& a, const tuple<int, int, int>& b) {
+            if (get<0>(a) != get<0>(b)) {
+                return get<0>(a) > get<0>(b); // sort by length descending
+            } else {
+                if (get<1>(a) != get<1>(b)) {
+                    return get<1>(a) > get<1>(b); // sort by max index descending
+                } else {
+                    return get<2>(a) < get<2>(b); // sort by min index ascending
+                }
+            }
         });
 
-        
-
+        for (const auto& [length, max_index, min_index] : apple_paths) {
+            cout << length << " " << max_index << " " << min_index << " ";
+        }
+        cout << endl;
     }
 
     return 0;
